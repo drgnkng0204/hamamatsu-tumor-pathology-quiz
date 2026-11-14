@@ -411,6 +411,13 @@ const DATA=[
     "images/24_7.jpg",
     "images/24_8.jpg",
     "images/24_9.jpg"
+   ],
+   [
+    "images/29_1.jpg",
+    "images/29_2.jpg",
+    "images/29_3.jpg",
+    "images/29_4.jpg",
+    "images/29_5.jpg"
    ]
   ]
  },
