@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>腫瘍病理 標本問題</title>
+<style>
+:root{--bg:#f6f4f1;--card:#fff;--ink:#222;--sub:#666;--line:#ddd;--red:#b3262d;--blue:#1a5fa8;--ok:#2e7d32;--ng:#c62828}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:var(--red);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px}
+header h1{font-size:17px;margin:0;flex:1}
+header button{background:rgba(255,255,255,.18);color:#fff;border:0;padding:6px 12px;border-radius:6px;font-size:14px;cursor:pointer}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:15px;margin:14px 0 6px;color:var(--red)}
+.menu{display:grid;gap:12px}
+.mbtn{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--red);border-radius:10px;padding:16px;font-size:16px;cursor:pointer}
+.mbtn small{display:block;color:var(--sub);font-size:13px;margin-top:2px}
+.mbtn:hover{background:#fff7f7}
+button.p{background:var(--red);color:#fff;border:0;border-radius:8px;padding:10px 20px;font-size:16px;cursor:pointer}
+button.s{background:#fff;color:var(--ink);border:1px solid #bbb;border-radius:8px;padding:9px 16px;font-size:15px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+label.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 0;cursor:pointer}
+label.opt small{color:var(--sub);display:block}
+.clsrow{display:flex;gap:8px;align-items:center;padding:7px 8px;border:1px solid var(--line);border-radius:8px;margin:5px 0;cursor:pointer}
+.clsrow b{min-width:3.6em;flex:1}
+.clsrow span{color:var(--sub);font-size:13px;margin-left:auto}
+.viewer{background:#111;border-radius:10px;position:relative;text-align:center;user-select:none}
+.viewer img{max-width:100%;max-height:62vh;display:block;margin:0 auto;cursor:zoom-in}
+.viewer.zoom{overflow:auto;max-height:80vh}
+.viewer.zoom img{max-width:none;max-height:none;width:180%;cursor:zoom-out}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:70px;border:0;background:rgba(255,255,255,.75);font-size:26px;cursor:pointer;border-radius:8px}
+.nav.l{left:8px}.nav.r{right:8px}
+.cnt{position:absolute;left:10px;top:8px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:1px 9px;border-radius:12px}
+.thumbs{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.thumbs img{height:54px;border:2px solid transparent;border-radius:4px;cursor:pointer;opacity:.7}
+.thumbs img.on{border-color:var(--red);opacity:1}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.bar .prog{flex:1;color:var(--sub);font-size:14px}
+.ans{border-left:6px solid var(--blue);background:#f3f8fd}
+.ans .code{color:var(--sub);font-size:14px}
+.ans .name{font-size:22px;font-weight:700;margin:2px 0}
+.ans .meta{font-size:14px;color:var(--sub)}
+.ans ul{margin:8px 0 0 1.2em;padding:0}
+.ans li{margin:3px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.grade button{min-width:90px}
+.g-ok{background:var(--ok)!important;color:#fff!important;border:0!important}
+.g-mid{background:#ef8f00!important;color:#fff!important;border:0!important}
+.g-ng{background:var(--ng)!important;color:#fff!important;border:0!important}
+.list .item{display:flex;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer}
+.list .item:hover{background:#fafafa}
+.list .code{color:var(--sub);font-size:13px;min-width:11em}
+.list .nm{font-weight:600}
+.list .org{margin-left:auto;color:var(--sub);font-size:13px;text-align:right}
+.tag{font-size:12px;background:#eee;border-radius:10px;padding:0 8px;color:#555}
+.tabs{display:flex;gap:6px;margin:8px 0}
+.tabs button{padding:5px 12px;border:1px solid #bbb;border-radius:16px;background:#fff;cursor:pointer}
+.tabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
+.note{font-size:13px;color:var(--sub)}
+.res li{margin:4px 0}
+.hidden{display:none}
+.refimg{max-width:100%;border-radius:6px}
+@media(max-width:600px){.list .code{display:none}.nav{width:38px;height:56px}}
+</style>
+</head>
+<body>
+<header><h1 id="title">腫瘍病理 標本問題</h1><button id="home" class="hidden">メニュー</button></header>
+<main id="app"></main>
+<script src="data.js"></script>
+<script>
+const CLS={"循":"循環障害","悪":"悪性腫瘍(癌・肉腫・悪性黒色腫)","良":"良性腫瘍"};
+const CLS_ORDER=["循","悪","良"];
+const app=document.getElementById("app"),homeBtn=document.getElementById("home");
+homeBtn.onclick=()=>showMenu();
+const $=(h)=>{const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const withImages=()=>DATA.filter(d=>d.cases.length);
+let keyHandler=null;
+document.addEventListener("keydown",e=>{if(keyHandler)keyHandler(e)});
+function setView(node,home){app.innerHTML="";app.appendChild(node);homeBtn.classList.toggle("hidden",!home);keyHandler=null;window.scrollTo(0,0)}
+
+/* ---------- 画像ビューア(矢印で前後、キーボード対応) ---------- */
+function viewer(imgs){
+  let i=0,zoom=false;
+  const box=$(`<div><div class="viewer"><button class="nav l" aria-label="前">◀</button><img alt=""><button class="nav r" aria-label="次">▶</button><span class="cnt"></span></div><div class="thumbs"></div></div>`);
+  const v=box.querySelector(".viewer"),im=v.querySelector("img"),cnt=v.querySelector(".cnt"),th=box.querySelector(".thumbs");
+  imgs.forEach((s,k)=>{const t=document.createElement("img");t.src=s;t.onclick=()=>go(k);th.appendChild(t)});
+  function go(n){i=(n+imgs.length)%imgs.length;im.src=imgs[i];cnt.textContent=`${i+1} / ${imgs.length}`;[...th.children].forEach((t,k)=>t.classList.toggle("on",k===i))}
+  v.querySelector(".l").onclick=()=>go(i-1);v.querySelector(".r").onclick=()=>go(i+1);
+  im.onclick=()=>{zoom=!zoom;v.classList.toggle("zoom",zoom)};
+  if(imgs.length<2){v.querySelectorAll(".nav").forEach(b=>b.classList.add("hidden"));th.classList.add("hidden")}
+  go(0);
+  box.prev=()=>go(i-1);box.next=()=>go(i+1);
+  return box;
+}
+function explHtml(d){
+  const ul=a=>`<ul>${a.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`;
+  let h="";
+  if(d.bg&&d.bg.length)h+=`<h3>ポイント</h3>${ul(d.bg)}`;
+  h+=`<h3>所見(解答例)</h3>${ul(d.expl)}`;
+  if(d.note)h+=`<p class="note">※${esc(d.note)}</p>`;
+  if(d.ref&&d.ref.length)h+=d.ref.map(r=>`<h3>${esc(r.cap)}</h3><img class="refimg" src="${r.src}" alt="">`).join("");
+  return h;
+}
+function head(d){return `<div class="code">${esc(d.code)} ／ ${esc(CLS[d.cls])}</div><div class="name">${esc(d.name)}</div><div class="meta">臓器: ${esc(d.organ)}　／　診断名(所見ファイル): ${esc(d.diag)}</div>`}
+
+/* ---------- メニュー ---------- */
+function showMenu(){
+  document.getElementById("title").textContent="腫瘍病理 標本問題";
+  const n=withImages().reduce((a,d)=>a+d.cases.length,0);
+  const el=$(`<div class="menu">
+   <button class="mbtn" id="m1">① 分類を選んで解く<small>循環障害・悪性腫瘍・良性腫瘍から選択(複数可)</small></button>
+   <button class="mbtn" id="m2">② 全てからランダムで解く<small>画像のある ${withImages().length} 疾患・${n} スライド(症例)から出題</small></button>
+   <button class="mbtn" id="m3">③ 診断名を選んで所見を見る(一覧)<small>全 ${DATA.length} 疾患の臓器・診断名・所見と画像</small></button>
+   <div class="note">画像はファイル名の番号が若い順に表示します。矢印(◀ ▶ / キーボードの ← →)で切り替え、画像クリックで拡大します。</div></div>`);
+  el.querySelector("#m1").onclick=()=>showSetup("cls");
+  el.querySelector("#m2").onclick=()=>showSetup("all");
+  el.querySelector("#m3").onclick=()=>showList();
+  setView(el,false);
+}
+
+/* ---------- 出題設定 ---------- */
+function showSetup(mode){
+  document.getElementById("title").textContent=mode==="cls"?"① 分類を選んで解く":"② 全てからランダムで解く";
+  const rows=CLS_ORDER.map(c=>{const ds=withImages().filter(d=>d.cls===c);const sl=ds.reduce((a,d)=>a+d.cases.length,0);
+    return `<label class="clsrow"><input type="checkbox" value="${c}" checked><b>${CLS[c]}</b><span>${ds.length}疾患 / ${sl}スライド</span></label>`}).join("");
+  const el=$(`<div class="card">
+   <h2>出題の設定</h2>
+   ${mode==="cls"?`<h3>分類</h3>${rows}`:""}
+   <h3>オプション</h3>
+   <label class="opt"><input type="checkbox" id="one"><span><b>一症例一問出題にする</b><small>同じ病名でスライドが複数ある場合(別の患者)、そのうち1つだけ出題します。オフなら全スライドを1問ずつ出題します。</small></span></label>
+   <label class="opt"><input type="checkbox" id="shuf" checked><span><b>出題順をランダムにする</b></span></label>
+   <label class="opt"><span><b>問題数</b></span><select id="num"><option value="0">すべて</option><option>5</option><option>10</option><option>20</option></select></label>
+   <div class="note">※複数の病名が同じ番号のスライドでも、別の患者のスライドは同じ問題の中に混ぜません。</div>
+   <div class="row"><button class="p" id="go">開始</button><button class="s" id="back">戻る</button></div></div>`);
+  el.querySelector("#back").onclick=showMenu;
+  el.querySelector("#go").onclick=()=>{
+    const sel=mode==="cls"?[...el.querySelectorAll(".clsrow input:checked")].map(x=>x.value):CLS_ORDER;
+    if(!sel.length){alert("分類を1つ以上選んでください");return}
+    let qs=[];
+    withImages().filter(d=>sel.includes(d.cls)).forEach(d=>{
+      if(el.querySelector("#one").checked){qs.push({d,c:Math.floor(Math.random()*d.cases.length)})}
+      else d.cases.forEach((_,c)=>qs.push({d,c}));
+    });
+    if(el.querySelector("#shuf").checked)qs=shuffle(qs);
+    const num=+el.querySelector("#num").value;if(num&&num<qs.length)qs=qs.slice(0,num);
+    startQuiz(qs);
+  };
+  setView(el,true);
+}
+
+/* ---------- 出題 ---------- */
+function startQuiz(qs){
+  let idx=0;const grades=[];
+  function show(){
+    document.getElementById("title").textContent=`問題 ${idx+1} / ${qs.length}`;
+    const q=qs[idx];let shown=false;
+    const el=$(`<div><div class="bar"><span class="prog">この標本の臓器名と診断名を答えてください(所見も思い出す)</span><button class="s" id="quit">中止</button></div><div id="vw"></div>
+      <div class="row"><button class="p" id="reveal">答えを表示</button></div><div id="ans"></div></div>`);
+    const vw=viewer(q.d.cases[q.c]);el.querySelector("#vw").appendChild(vw);
+    el.querySelector("#quit").onclick=()=>{if(confirm("中止してメニューに戻りますか?"))showMenu()};
+    function reveal(){
+      if(shown)return;shown=true;el.querySelector("#reveal").classList.add("hidden");
+      const a=$(`<div class="card ans">${head(q.d)}${explHtml(q.d)}
+        <div class="row grade"><button class="s" data-g="ok">できた</button><button class="s" data-g="mid">あいまい</button><button class="s" data-g="ng">できなかった</button></div></div>`);
+      a.querySelectorAll(".grade button").forEach(b=>b.onclick=()=>{grades[idx]=b.dataset.g;next()});
+      el.querySelector("#ans").appendChild(a);a.scrollIntoView({behavior:"smooth",block:"nearest"});
+    }
+    el.querySelector("#reveal").onclick=reveal;
+    function next(){idx++;idx<qs.length?show():finish()}
+    setView(el,true);
+    keyHandler=e=>{if(e.key==="ArrowLeft")vw.prev();else if(e.key==="ArrowRight")vw.next();else if(e.key===" "||e.key==="Enter"){e.preventDefault();reveal()}};
+  }
+  function finish(){
+    document.getElementById("title").textContent="結果";
+    const c={ok:0,mid:0,ng:0};grades.forEach(g=>c[g]++);
+    const weak=qs.map((q,i)=>({q,g:grades[i]})).filter(x=>x.g!=="ok");
+    const el=$(`<div class="card"><h2>お疲れさまでした</h2><p>できた <b>${c.ok}</b> ／ あいまい <b>${c.mid}</b> ／ できなかった <b>${c.ng}</b>(全${qs.length}問)</p>
+      ${weak.length?`<h3>復習(あいまい・できなかった)</h3><ul class="res">${weak.map(x=>`<li>${esc(x.q.d.name)}<span class="note"> ${esc(x.q.d.code)}</span></li>`).join("")}</ul>`:"<p>すべてできました。</p>"}
+      <div class="row"><button class="p" id="again">同じ問題をもう一度</button>${weak.length?`<button class="s" id="rev">復習だけ解く</button>`:""}<button class="s" id="menu">メニュー</button></div></div>`);
+    el.querySelector("#again").onclick=()=>startQuiz(qs);
+    if(weak.length)el.querySelector("#rev").onclick=()=>startQuiz(weak.map(x=>x.q));
+    el.querySelector("#menu").onclick=showMenu;
+    setView(el,true);
+  }
+  show();
+}
+
+/* ---------- ③ 病名一覧と解説 ---------- */
+function showList(){
+  document.getElementById("title").textContent="③ 診断名一覧・所見";
+  const el=$(`<div class="card list"></div>`);
+  CLS_ORDER.forEach(c=>{
+    el.appendChild($(`<h3>${CLS[c]}</h3>`));
+    DATA.filter(d=>d.cls===c).forEach(d=>{
+      const it=$(`<div class="item"><span class="code">${esc(d.code)}</span><span class="nm">${esc(d.name)}</span>${d.cases.length?`<span class="tag">画像${d.cases.length>1?d.cases.length+"症例":""}</span>`:`<span class="tag">画像なし</span>`}<span class="org">${esc(d.organ)}</span></div>`);
+      it.onclick=()=>showDetail(d);el.appendChild(it);
+    });
+  });
+  setView(el,true);
+}
+function showDetail(d){
+  document.getElementById("title").textContent=d.name;
+  const el=$(`<div><div class="card ans">${head(d)}${explHtml(d)}</div><div id="imgs"></div><div class="row"><button class="s" id="back">一覧に戻る</button></div></div>`);
+  const holder=el.querySelector("#imgs");let vw=null;
+  if(!d.cases.length)holder.appendChild($(`<div class="card note">この疾患のスライド画像はフォルダにありません。</div>`));
+  else{
+    const wrap=$(`<div class="card"><h3>スライド画像</h3>${d.cases.length>1?`<div class="note">別の患者のスライドです。症例ごとに分けて表示します。</div><div class="tabs"></div>`:""}<div class="v"></div></div>`);
+    const v=wrap.querySelector(".v");
+    const pick=k=>{v.innerHTML="";vw=viewer(d.cases[k]);v.appendChild(vw);wrap.querySelectorAll(".tabs button").forEach((b,j)=>b.classList.toggle("on",j===k))};
+    if(d.cases.length>1){const tabs=wrap.querySelector(".tabs");d.cases.forEach((_,k)=>{const b=document.createElement("button");b.textContent="症例"+String.fromCharCode(65+k);b.onclick=()=>pick(k);tabs.appendChild(b)})}
+    pick(0);holder.appendChild(wrap);
+  }
+  el.querySelector("#back").onclick=showList;
+  setView(el,true);
+  keyHandler=e=>{if(!vw)return;if(e.key==="ArrowLeft")vw.prev();else if(e.key==="ArrowRight")vw.next()};
+}
+showMenu();
+</script>
+</body>
+</html>
